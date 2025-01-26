@@ -3,19 +3,33 @@ package org.tunilink.tunilink.Controller;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.tunilink.tunilink.Entity.TypeRole;
 import org.tunilink.tunilink.Entity.User;
 import org.tunilink.tunilink.Repository.UserRepository;
 import org.tunilink.tunilink.Service.AuthService;
 import org.tunilink.tunilink.Service.IUserService;
+import org.tunilink.tunilink.Service.UserService;
 import org.tunilink.tunilink.errors.PasswordDoesNotMatchTheOld;
 import org.tunilink.tunilink.errors.UserNotFoundException;
 import org.tunilink.tunilink.model.ChangePasswordRequest;
 import org.webjars.NotFoundException;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -24,9 +38,14 @@ import java.util.List;
 public class UserRestController {
 
     @Autowired
+    private Environment env;
+    @Autowired
     IUserService iUserService;
     @Autowired
     private final AuthService authService;
+    @Autowired
+    UserService userService;
+
 
 
     @GetMapping("findUserByUsername/{username}")
@@ -122,6 +141,55 @@ public class UserRestController {
     public User affectoffre(@RequestParam String username, @RequestParam String idoffre) {
         return iUserService.AffecterUseraOfrre(username, idoffre);
     }
+
+
+    @PostMapping(value = "/uploadCv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadCv(@RequestParam("file") MultipartFile file,
+                                      @RequestParam("username") String username) {
+        User user = iUserService.UploadCv(file, username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or upload failed");
+        }
+        return ResponseEntity.ok(user);
+
+    }
+
+
+    @GetMapping("/downloadCv/{username}")
+    public ResponseEntity<Resource> downloadCv(@PathVariable String username) {
+        try {
+            // Retrieve the user by username
+            User user = iUserService.findbyUsername(username);
+
+            // Check if the user exists and has a CV
+            if (user == null || user.getCv() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            // Get the file path where the CV is stored
+            Path fileStorageLocation = Paths.get(env.getProperty("file.upload-dir")).toAbsolutePath().normalize();
+            Path filePath = fileStorageLocation.resolve(user.getCv()).normalize();
+
+            // Load the file as a Resource
+            Resource resource = new UrlResource(filePath.toUri());
+
+            // Check if the file exists
+            if (!resource.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            // Return the file with headers for download
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(Files.probeContentType(filePath)))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
 
 }
 

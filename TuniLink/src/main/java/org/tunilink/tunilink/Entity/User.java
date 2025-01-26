@@ -1,5 +1,6 @@
 package org.tunilink.tunilink.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,12 +19,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@FieldDefaults(level= AccessLevel.PRIVATE)
-@Setter
-@Getter
-@ToString
-@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@AllArgsConstructor
 @Document
 public class User {
     @Id
@@ -31,40 +29,39 @@ public class User {
     private String firstname;
     private String lastname;
     private String cin;
-    @Indexed(unique=true)
+    @Indexed(unique = true)
     @Email
     private String email;
     private LocalDate dateN;
     private String country;
     private String username;
+    private String cv;
+
     @Field("role")
     private TypeRole role;
     @NotNull(message = "Password cannot be null")
     @Size(min = 8, message = "Password must be at least 8 characters long")
-    private String password;
+    private String password; // Consider hashing the password
     private Date updatedAt;
     private Date createdAt;
-    private boolean enabled = false ;
-    private LocalDate lastLogin ;
+    private boolean enabled = false;
+    private LocalDate lastLogin;
     private String verificationToken;
 
     @DBRef
     @JsonIgnore
-    private Set<Candidature> candidatures =new HashSet<>();
+    private Set<Candidature> candidatures = new HashSet<>();
 
     @DBRef
     @JsonIgnore
     @EqualsAndHashCode.Exclude
-    private Set<Offre> of =new HashSet<>();
+    private Set<Offre> of = new HashSet<>();
 
     @DBRef
-    @JsonIgnore
-    private Set<Experience> experiences =new HashSet<>();
+    @EqualsAndHashCode.Exclude
+    private Set<Experience> experiences = new HashSet<>();
 
-    public boolean getEnabled(){
+    public boolean getEnabled() {
         return this.enabled;
     }
-
-
-
 }

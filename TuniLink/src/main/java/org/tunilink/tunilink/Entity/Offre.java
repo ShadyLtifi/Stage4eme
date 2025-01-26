@@ -21,7 +21,7 @@ public class Offre {
     String id;
     String title;
     String description;
-    String requirements;
+    private Set<String> requirements;
     String country;
     Long nbrPlace;
     TypeOfrre typeOffre;

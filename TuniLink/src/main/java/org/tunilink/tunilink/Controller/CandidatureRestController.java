@@ -2,6 +2,7 @@ package org.tunilink.tunilink.Controller;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.tunilink.tunilink.Entity.Candidature;
@@ -66,4 +67,14 @@ public class CandidatureRestController {
     public Set<Candidature> retrieveCandidatureByUsername(@RequestParam String username)  {
         return candidatureService.getCandidatureByUsername(username);
     }
+
+    // http://localhost:8585/by-offre/{idoffre}
+
+    @GetMapping("/by-offre/{idoffre}")
+    public ResponseEntity<Set<Candidature>> getCandidatureByOffre(@PathVariable String idoffre) {
+        Set<Candidature> candidatures = candidatureService.getCandidatureByOffer(idoffre);
+        return new ResponseEntity<>(candidatures, HttpStatus.OK);
+    }
+
+
 }

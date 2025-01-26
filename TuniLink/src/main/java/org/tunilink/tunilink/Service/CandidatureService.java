@@ -66,4 +66,22 @@ public class CandidatureService implements ICandidatureService{
         }
         return candidatureRepository.findByUser(u);
     }
+
+    @Override
+    public Set<Candidature> getCandidatureByOffer(String idoffer) {
+        Set<Candidature> candidatures = new HashSet<>();
+        Offre offer = offreRepository.findOneById(idoffer);
+        if (offer != null) {
+            List<Candidature> c = candidatureRepository.findAll();
+            for (Candidature cn : c) {
+                Offre o = cn.getOffre();
+                if (o != null && o.getId().equals(offer.getId())) {
+                    candidatures.add(cn);
+                }
+            }
+        }
+        return candidatures;
+    }
+
+
 }

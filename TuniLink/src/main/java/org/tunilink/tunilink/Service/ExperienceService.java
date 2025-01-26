@@ -3,11 +3,8 @@ package org.tunilink.tunilink.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.tunilink.tunilink.Entity.Competence;
 import org.tunilink.tunilink.Entity.Experience;
-import org.tunilink.tunilink.Entity.Offre;
 import org.tunilink.tunilink.Entity.User;
-import org.tunilink.tunilink.Repository.CompetenceRepository;
 import org.tunilink.tunilink.Repository.ExperienceRepository;
 import org.tunilink.tunilink.Repository.UserRepository;
 
@@ -23,23 +20,15 @@ public class ExperienceService implements IExperienceService{
     ExperienceRepository experienceRepository;
     @Autowired
     UserRepository userRepository;
-    @Autowired
-    CompetenceRepository competenceRepository;
+
     @Override
-    public Experience createExperience(Experience ex, User u, Competence c) {
-        if (u != null) {
-            ex.setUser(u);
+    public Experience createExperience(Experience ex) {
 
-            Competence savedCompetence = competenceRepository.save(c);
-            ex.getCompetences().add(savedCompetence);
+        return experienceRepository.save(ex);
 
-            Experience expr = experienceRepository.save(ex);
-            u.getExperiences().add(expr);
-            experienceRepository.save(ex);
-            return expr;
-        }
-        return null;
     }
+
+
     @Override
     public Experience updateExperience(Experience ex) {
         return experienceRepository.save(ex);

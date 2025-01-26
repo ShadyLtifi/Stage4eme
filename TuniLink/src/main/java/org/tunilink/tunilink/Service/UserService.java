@@ -1,11 +1,19 @@
 package org.tunilink.tunilink.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.tunilink.tunilink.Entity.*;
 import org.tunilink.tunilink.Repository.CandidatureRepository;
 import org.tunilink.tunilink.Repository.OffreRepository;
@@ -13,6 +21,13 @@ import org.tunilink.tunilink.Repository.UserRepository;
 import org.tunilink.tunilink.Security.JwtTokenUtil;
 import org.webjars.NotFoundException;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +35,8 @@ import java.util.Set;
 
 @Service
 public class UserService implements IUserService {
+    @Autowired
+    private Environment env;
     @Autowired
     private  UserRepository userRepo;
     @Autowired
@@ -53,6 +70,9 @@ public class UserService implements IUserService {
         if (u != null) {
             u.setFirstname(user.getFirstname());
             u.setLastname(user.getLastname());
+            u.setDateN(user.getDateN());
+            u.setCountry(user.getCountry());
+            u.setCin(user.getCin());
             u.setEmail(user.getEmail());
             return userRepo.save(u);
         } else {
@@ -174,6 +194,37 @@ public class UserService implements IUserService {
         return u;
     }
 
+    @Override
+    public  User UploadCv (MultipartFile file, String username) {
+        try {
+            String cv = StringUtils.cleanPath(file.getOriginalFilename());
+            Path fileStorageLocation = Paths.get(env.getProperty("file.upload-dir"))
+                    .toAbsolutePath().normalize();
+            Path targetLocation = fileStorageLocation.resolve(cv);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
+            // Créer une nouvelle leçon avec le contenu du fichier et le titre, puis sauvegarder dans la base de données
+            User u = userRepo.findUserByUsername(username);
+            if (u == null) {
+                return null;
+            }
+            u.setCv(cv);
+            return userRepo.save(u);
+        } catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+            return userRepo.findUserByUsername(username); // Adjust to your repository method
+        }
+        return null;
+    }
 
 }

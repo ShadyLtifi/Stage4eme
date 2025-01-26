@@ -6,14 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.tunilink.tunilink.Entity.Competence;
 import org.tunilink.tunilink.Entity.Experience;
-import org.tunilink.tunilink.Entity.Offre;
 import org.tunilink.tunilink.Entity.User;
-import org.tunilink.tunilink.Repository.UserRepository;
 import org.tunilink.tunilink.Service.IExperienceService;
 import org.tunilink.tunilink.Service.UserService;
-import org.tunilink.tunilink.model.ExperienceDto;
 
 import java.util.List;
 import java.util.Set;
@@ -42,17 +38,17 @@ public class ExperienceRestController {
 
     // http://localhost:8585/add-Experience
     @PostMapping("/add-Experience")
-    @ResponseBody
-    public ResponseEntity<Experience> addExperience(@RequestParam String email, @RequestBody ExperienceDto experienceDto) {
-        User user = userService.findByEmail(email);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    public ResponseEntity<Experience> addExperience(@RequestParam String email, @RequestBody Experience experience) {
+        User user = userService.findByEmail(email); // Fetch the user by email
+        if (user != null) {
+            experience.setUser(user); // Set the user on the experience
+            Experience savedExperience = experienceService.createExperience(experience);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedExperience);
         }
-        Experience ex = experienceDto.getExperience();
-        Competence c = experienceDto.getCompetence();
-        Experience e = experienceService.createExperience(ex, user, c);
-        return ResponseEntity.status(HttpStatus.CREATED).body(e);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Return NOT_FOUND if user is not found
     }
+
+
 
 
 

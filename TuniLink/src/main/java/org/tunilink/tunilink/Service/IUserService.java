@@ -1,6 +1,7 @@
 package org.tunilink.tunilink.Service;
 
 
+import org.springframework.web.multipart.MultipartFile;
 import org.tunilink.tunilink.Entity.TypeRole;
 import org.tunilink.tunilink.Entity.User;
 
@@ -24,5 +25,8 @@ public interface IUserService {
 
     TypeRole getRoleByUsername(String username);
     User AffecterUseraOfrre(String username , String idoffre);
+
+    User UploadCv (MultipartFile file, String username);
+
 
 }
